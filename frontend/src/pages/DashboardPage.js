@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
-import { Activity, Moon, Droplets, Brain, TrendingUp, AlertCircle, RefreshCw } from "lucide-react";
+import { Activity, Moon, Droplets, Brain, TrendingUp, AlertCircle, RefreshCw, Pill } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -60,17 +60,20 @@ function FrequencyBar({ label, count, maxCount }) {
 export default function DashboardPage() {
   const [stats, setStats] = useState(null);
   const [patterns, setPatterns] = useState(null);
+  const [adherence, setAdherence] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = async () => {
     setRefreshing(true);
     try {
-      const [statsRes, patternsRes] = await Promise.all([
+      const [statsRes, patternsRes, adherenceRes] = await Promise.all([
         axios.get(`${API}/dashboard/stats`),
         axios.get(`${API}/patterns`),
+        axios.get(`${API}/reminder/adherence`).catch(() => ({ data: null })),
       ]);
       setStats(statsRes.data);
       setPatterns(patternsRes.data);
+      setAdherence(adherenceRes.data);
     } catch (e) {
       console.error("Failed to load dashboard data", e);
     } finally {
@@ -111,7 +114,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           icon={Activity}
           label="Entries"
@@ -139,6 +142,13 @@ export default function DashboardPage() {
           value={stats?.total_messages ?? 0}
           subtitle="All time"
           color="bg-[#9CB4D4]/15 text-[#9CB4D4]"
+        />
+        <StatCard
+          icon={Pill}
+          label="Med Adherence"
+          value={adherence?.overall_rate != null ? `${adherence.overall_rate}%` : "--"}
+          subtitle="7-day average"
+          color="bg-[#F4AAB9]/15 text-[#F4AAB9]"
         />
       </div>
 

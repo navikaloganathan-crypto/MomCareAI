@@ -6,6 +6,7 @@ import ChatPage from "@/pages/ChatPage";
 import DashboardPage from "@/pages/DashboardPage";
 import ReportPage from "@/pages/ReportPage";
 import PrescriptionPage from "@/pages/PrescriptionPage";
+import RemindersPage from "@/pages/RemindersPage";
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Routes>
           <Route path="/" element={<ChatPage />} />
           <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/reminders" element={<RemindersPage />} />
           <Route path="/report" element={<ReportPage />} />
           <Route path="/prescription" element={<PrescriptionPage />} />
         </Routes>

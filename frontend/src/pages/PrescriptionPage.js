@@ -1,6 +1,7 @@
 import { useState } from "react";
 import axios from "axios";
-import { Pill, Clock, AlertCircle, Loader2, Sparkles, ChevronRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Pill, Clock, AlertCircle, Loader2, Sparkles, ChevronRight, Bell, Check } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -83,6 +84,8 @@ export default function PrescriptionPage() {
   const [result, setResult] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [remindersSaved, setRemindersSaved] = useState(false);
+  const navigate = useNavigate();
 
   const analyzePrescription = async () => {
     if (!text.trim() || loading) return;
@@ -90,10 +93,15 @@ export default function PrescriptionPage() {
     setLoading(true);
     setError(null);
     setResult(null);
+    setRemindersSaved(false);
 
     try {
       const res = await axios.post(`${API}/prescription/analyze`, { text: text.trim() });
       setResult(res.data);
+      // Reminders are auto-created by backend
+      if (res.data.reminders?.length > 0) {
+        setRemindersSaved(true);
+      }
     } catch (e) {
       console.error("Prescription analysis failed", e);
       setError("Failed to analyze prescription. Please try again.");
@@ -190,6 +198,32 @@ Syrup Amoxicillin 250mg/5ml - 5ml three times daily for 5 days`;
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-[#5C5A59] leading-relaxed whitespace-pre-line">{result.explanation}</p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Reminders saved banner */}
+          {remindersSaved && (
+            <Card className="border-[#A8C3A6]/25 shadow-sm rounded-2xl bg-[#A8C3A6]/8 animate-fade-in" data-testid="reminders-saved-banner">
+              <CardContent className="p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[#A8C3A6]/20 flex items-center justify-center">
+                    <Check className="w-4 h-4 text-[#A8C3A6]" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-[#2C2A29]">Reminders auto-created!</p>
+                    <p className="text-xs text-[#5C5A59]">Amma AI will remind you to take your medicines on time.</p>
+                  </div>
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => navigate("/reminders")}
+                  className="rounded-full border-[#A8C3A6]/30 text-[#5C5A59] hover:bg-[#A8C3A6]/10"
+                  data-testid="go-to-reminders-button"
+                >
+                  <Bell className="w-3.5 h-3.5 mr-1.5" /> View Reminders
+                </Button>
               </CardContent>
             </Card>
           )}

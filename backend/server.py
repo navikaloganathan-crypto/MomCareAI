@@ -535,19 +535,314 @@ async def analyze_prescription(req: PrescriptionRequest):
         }
 
     # Save to DB
+    prescription_id = str(uuid.uuid4())
     doc = {
-        "id": str(uuid.uuid4()),
+        "id": prescription_id,
         "raw_text": text,
         "analysis": parsed,
         "timestamp": datetime.now(timezone.utc).isoformat(),
     }
     await db.prescriptions.insert_one(doc)
 
+    # Auto-create reminders from prescription analysis
+    created_reminders = []
+    for reminder_data in parsed.get("reminders", []):
+        reminder_doc = {
+            "id": str(uuid.uuid4()),
+            "session_id": "default",
+            "medicine": reminder_data.get("medicine", "Unknown"),
+            "dosage": None,
+            "time": reminder_data.get("time", "08:00"),
+            "frequency": "daily",
+            "notes": reminder_data.get("message", ""),
+            "prescription_id": prescription_id,
+            "active": True,
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "logs": [],
+        }
+        # Match dosage from medicines list
+        for med in parsed.get("medicines", []):
+            if med.get("name", "").lower() in reminder_data.get("medicine", "").lower():
+                reminder_doc["dosage"] = med.get("dosage")
+                break
+        await db.reminders.insert_one(reminder_doc)
+        reminder_doc.pop("_id", None)
+        created_reminders.append(reminder_doc)
+
     return PrescriptionResponse(
         medicines=parsed.get("medicines", []),
         explanation=parsed.get("explanation", ""),
         reminders=parsed.get("reminders", []),
     )
+
+
+# ──────────────────────────────────────────────
+# MEDICATION REMINDER SYSTEM (AMMA AI)
+# ──────────────────────────────────────────────
+
+class ReminderCreate(BaseModel):
+    medicine: str
+    dosage: Optional[str] = None
+    time: str  # HH:MM format
+    frequency: Optional[str] = "daily"
+    notes: Optional[str] = None
+    prescription_id: Optional[str] = None
+
+
+class ReminderUpdate(BaseModel):
+    status: str  # "taken", "skipped", "snoozed"
+
+
+class AmmaRequest(BaseModel):
+    reminder_id: Optional[str] = None
+    action: str  # "taken", "not_taken", "health_check", "greeting", "follow_up"
+    context: Optional[str] = None
+
+
+AMMA_RESPONSES = {
+    "taken": [
+        "That's good Amma, you're taking good care of yourself.",
+        "Amma, I'm so proud of you for remembering! Keep going, you're doing great.",
+        "Well done Amma! Your health matters and you're showing that.",
+    ],
+    "not_taken": [
+        "Amma, please try to take it on time. It will help you feel better.",
+        "Amma, I understand it's hard sometimes. But please take your medicine when you can.",
+        "Amma, your health is so important. Please don't skip your medicine.",
+    ],
+    "reminder": [
+        "Amma, it's time to take your medicine. Please don't forget.",
+        "Amma, your medicine is due now. Taking care of yourself is the best gift.",
+        "Amma, gentle reminder - please take your medicine now.",
+    ],
+    "health_check": [
+        "Amma, are you feeling better today after taking the medicine?",
+        "Amma, how are you feeling today? I hope the medicine is helping.",
+        "Amma, I'm checking in on you. How is your health today?",
+    ],
+    "not_improving": [
+        "Amma, if you're still not feeling better, we should consider visiting the doctor.",
+        "Amma, please don't ignore how you feel. Maybe it's time to see your doctor.",
+        "Amma, your wellbeing matters the most. Please consider a doctor visit if things aren't improving.",
+    ],
+    "greeting": [
+        "Good morning Amma! I hope you slept well. Let's make today a healthy day.",
+        "Amma, wishing you a wonderful day ahead. Don't forget to take care of yourself.",
+        "Hello Amma! Remember, I'm always here for you.",
+    ],
+}
+
+import random
+
+
+def get_amma_message(category: str) -> str:
+    messages = AMMA_RESPONSES.get(category, AMMA_RESPONSES["greeting"])
+    return random.choice(messages)
+
+
+@api_router.post("/reminder")
+async def create_reminder(req: ReminderCreate, session_id: str = "default"):
+    doc = {
+        "id": str(uuid.uuid4()),
+        "session_id": session_id,
+        "medicine": req.medicine,
+        "dosage": req.dosage,
+        "time": req.time,
+        "frequency": req.frequency,
+        "notes": req.notes,
+        "prescription_id": req.prescription_id,
+        "active": True,
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "logs": [],  # Track taken/skipped history
+    }
+    await db.reminders.insert_one(doc)
+    doc.pop("_id", None)
+    return doc
+
+
+@api_router.get("/reminder")
+async def get_reminders(session_id: str = "default"):
+    reminders = await db.reminders.find(
+        {"session_id": session_id, "active": True},
+        {"_id": 0}
+    ).sort("time", 1).to_list(100)
+    return {"reminders": reminders}
+
+
+@api_router.delete("/reminder/{reminder_id}")
+async def delete_reminder(reminder_id: str):
+    result = await db.reminders.update_one(
+        {"id": reminder_id},
+        {"$set": {"active": False}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Reminder not found")
+    return {"message": "Reminder deactivated"}
+
+
+@api_router.post("/reminder/{reminder_id}/log")
+async def log_reminder_action(reminder_id: str, req: ReminderUpdate):
+    log_entry = {
+        "status": req.status,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    result = await db.reminders.update_one(
+        {"id": reminder_id},
+        {"$push": {"logs": log_entry}}
+    )
+    if result.modified_count == 0:
+        raise HTTPException(status_code=404, detail="Reminder not found")
+
+    # Get Amma response
+    if req.status == "taken":
+        amma_msg = get_amma_message("taken")
+    elif req.status == "skipped":
+        amma_msg = get_amma_message("not_taken")
+    else:
+        amma_msg = get_amma_message("reminder")
+
+    return {"message": amma_msg, "status": req.status}
+
+
+@api_router.post("/reminder/amma")
+async def amma_ai_response(req: AmmaRequest):
+    action = req.action
+
+    if action == "taken":
+        msg = get_amma_message("taken")
+    elif action == "not_taken":
+        msg = get_amma_message("not_taken")
+    elif action == "health_check":
+        msg = get_amma_message("health_check")
+    elif action == "greeting":
+        msg = get_amma_message("greeting")
+    elif action == "follow_up":
+        # Check recent adherence
+        cutoff = (datetime.now(timezone.utc) - timedelta(days=3)).isoformat()
+        reminders = await db.reminders.find(
+            {"active": True},
+            {"_id": 0, "logs": 1}
+        ).to_list(100)
+
+        skipped = 0
+        taken = 0
+        for r in reminders:
+            for log in r.get("logs", []):
+                if log.get("timestamp", "") >= cutoff:
+                    if log["status"] == "taken":
+                        taken += 1
+                    elif log["status"] == "skipped":
+                        skipped += 1
+
+        if skipped > taken and skipped > 0:
+            msg = get_amma_message("not_improving")
+        elif taken > 0:
+            msg = get_amma_message("taken")
+        else:
+            msg = get_amma_message("health_check")
+    else:
+        msg = get_amma_message("greeting")
+
+    return {"message": msg, "action": action}
+
+
+@api_router.get("/reminder/check")
+async def check_due_reminders(session_id: str = "default"):
+    """Check for reminders that are due around the current time."""
+    now = datetime.now(timezone.utc)
+    current_time = now.strftime("%H:%M")
+
+    reminders = await db.reminders.find(
+        {"session_id": session_id, "active": True},
+        {"_id": 0}
+    ).to_list(100)
+
+    due = []
+    upcoming = []
+
+    for r in reminders:
+        reminder_time = r.get("time", "00:00")
+        # Check if already taken today
+        today_str = now.date().isoformat()
+        already_logged_today = False
+        for log in r.get("logs", []):
+            if log.get("timestamp", "").startswith(today_str):
+                already_logged_today = True
+                break
+
+        if already_logged_today:
+            continue
+
+        # Calculate if due (within 30 min window)
+        try:
+            rh, rm = map(int, reminder_time.split(":"))
+            ch, cm = map(int, current_time.split(":"))
+            diff_min = (ch * 60 + cm) - (rh * 60 + rm)
+            if -5 <= diff_min <= 30:
+                due.append({**r, "amma_message": get_amma_message("reminder")})
+            elif -60 <= diff_min < -5:
+                upcoming.append(r)
+        except (ValueError, Exception):
+            pass
+
+    return {"due": due, "upcoming": upcoming, "current_time": current_time}
+
+
+@api_router.get("/reminder/adherence")
+async def get_adherence_stats(session_id: str = "default", days: int = 7):
+    """Get medication adherence statistics."""
+    cutoff = (datetime.now(timezone.utc) - timedelta(days=days)).isoformat()
+    reminders = await db.reminders.find(
+        {"session_id": session_id, "active": True},
+        {"_id": 0}
+    ).to_list(100)
+
+    total_taken = 0
+    total_skipped = 0
+    total_snoozed = 0
+    medicine_adherence = {}
+
+    for r in reminders:
+        med_name = r.get("medicine", "Unknown")
+        taken = 0
+        skipped = 0
+        for log in r.get("logs", []):
+            if log.get("timestamp", "") >= cutoff:
+                if log["status"] == "taken":
+                    taken += 1
+                    total_taken += 1
+                elif log["status"] == "skipped":
+                    skipped += 1
+                    total_skipped += 1
+                elif log["status"] == "snoozed":
+                    total_snoozed += 1
+
+        medicine_adherence[med_name] = {
+            "taken": taken,
+            "skipped": skipped,
+            "rate": round(taken / max(taken + skipped, 1) * 100) if (taken + skipped) > 0 else 0,
+        }
+
+    total = total_taken + total_skipped
+    overall_rate = round(total_taken / max(total, 1) * 100) if total > 0 else 0
+
+    # Amma message based on adherence
+    if overall_rate >= 80:
+        amma_msg = get_amma_message("taken")
+    elif overall_rate >= 50:
+        amma_msg = get_amma_message("not_taken")
+    else:
+        amma_msg = get_amma_message("not_improving")
+
+    return {
+        "overall_rate": overall_rate,
+        "total_taken": total_taken,
+        "total_skipped": total_skipped,
+        "total_snoozed": total_snoozed,
+        "medicine_adherence": medicine_adherence,
+        "amma_message": amma_msg,
+        "period_days": days,
+    }
 
 
 # ──────────────────────────────────────────────

@@ -197,6 +197,167 @@ class MomCareAPITester:
             
         return success
     
+    def test_reminder_creation(self):
+        """Test creating a medication reminder"""
+        data = {
+            "medicine": "Paracetamol",
+            "dosage": "500mg", 
+            "time": "08:00",
+            "frequency": "daily"
+        }
+        success, response = self.run_test("Create Reminder", "POST", "reminder", 200, data)
+        
+        if success:
+            required_fields = ["id", "medicine", "dosage", "time", "active"]
+            for field in required_fields:
+                if field not in response:
+                    self.log(f"❌ Reminder creation response missing field: {field}", "ERROR")
+                    return False
+            
+            self.reminder_id = response.get("id")  # Store for later tests
+            self.log(f"✅ Reminder created with ID: {self.reminder_id}")
+            
+        return success
+    
+    def test_get_reminders(self):
+        """Test getting reminders list"""
+        success, response = self.run_test("Get Reminders", "GET", "reminder")
+        
+        if success:
+            if "reminders" not in response:
+                self.log(f"❌ Get reminders response missing 'reminders' field", "ERROR")
+                return False
+            
+            reminders = response.get("reminders", [])
+            self.log(f"✅ Retrieved {len(reminders)} reminders")
+            
+        return success
+    
+    def test_reminder_adherence(self):
+        """Test getting adherence statistics"""
+        success, response = self.run_test("Reminder Adherence", "GET", "reminder/adherence")
+        
+        if success:
+            required_fields = ["overall_rate", "total_taken", "total_skipped", "amma_message"]
+            for field in required_fields:
+                if field not in response:
+                    self.log(f"❌ Adherence response missing field: {field}", "ERROR")
+                    return False
+            
+            self.log(f"✅ Adherence stats - Rate: {response.get('overall_rate')}%, Amma: {response.get('amma_message')[:50]}...")
+            
+        return success
+    
+    def test_amma_responses(self):
+        """Test Amma AI responses for different actions"""
+        actions = ["greeting", "taken", "not_taken", "health_check"]
+        
+        for action in actions:
+            data = {"action": action}
+            success, response = self.run_test(f"Amma Response ({action})", "POST", "reminder/amma", 200, data)
+            
+            if success:
+                if "message" not in response:
+                    self.log(f"❌ Amma response missing 'message' field for action: {action}", "ERROR")
+                    return False
+                
+                message = response.get("message", "")
+                if not message or len(message) < 10:
+                    self.log(f"❌ Amma message too short for action: {action}", "ERROR")
+                    return False
+                
+                self.log(f"✅ Amma {action} response: {message[:50]}...")
+            else:
+                return False
+                
+        return True
+    
+    def test_reminder_check(self):
+        """Test checking due and upcoming reminders"""
+        success, response = self.run_test("Check Due Reminders", "GET", "reminder/check")
+        
+        if success:
+            required_fields = ["due", "upcoming", "current_time"]
+            for field in required_fields:
+                if field not in response:
+                    self.log(f"❌ Reminder check response missing field: {field}", "ERROR")
+                    return False
+            
+            due = response.get("due", [])
+            upcoming = response.get("upcoming", [])
+            self.log(f"✅ Reminder check - {len(due)} due, {len(upcoming)} upcoming")
+            
+        return success
+    
+    def test_reminder_logging(self):
+        """Test logging reminder actions"""
+        if not hasattr(self, 'reminder_id') or not self.reminder_id:
+            self.log("❌ No reminder ID available for logging test", "ERROR")
+            return False
+        
+        data = {"status": "taken"}
+        success, response = self.run_test("Log Reminder Action", "POST", f"reminder/{self.reminder_id}/log", 200, data)
+        
+        if success:
+            required_fields = ["message", "status"]
+            for field in required_fields:
+                if field not in response:
+                    self.log(f"❌ Reminder log response missing field: {field}", "ERROR")
+                    return False
+            
+            self.log(f"✅ Reminder logged as {response.get('status')}: {response.get('message')[:50]}...")
+            
+        return success
+    
+    def test_reminder_deletion(self):
+        """Test deactivating a reminder"""
+        if not hasattr(self, 'reminder_id') or not self.reminder_id:
+            self.log("❌ No reminder ID available for deletion test", "ERROR")
+            return False
+        
+        success, response = self.run_test("Delete Reminder", "DELETE", f"reminder/{self.reminder_id}", 200)
+        
+        if success:
+            if "message" not in response:
+                self.log(f"❌ Reminder deletion response missing 'message' field", "ERROR")
+                return False
+            
+            self.log(f"✅ Reminder deleted: {response.get('message')}")
+            
+        return success
+    
+    def test_prescription_auto_reminders(self):
+        """Test that prescription analysis auto-creates reminders"""
+        # First, get current reminder count
+        success, before_response = self.run_test("Get Reminders Before", "GET", "reminder")
+        if not success:
+            return False
+        
+        before_count = len(before_response.get("reminders", []))
+        
+        # Analyze prescription
+        test_prescription = "Tab Paracetamol 500mg twice daily for 5 days"
+        data = {"text": test_prescription}
+        success, response = self.run_test("Prescription Auto-Reminders", "POST", "prescription/analyze", 200, data)
+        
+        if not success:
+            return False
+        
+        # Check if reminders were auto-created
+        time.sleep(1)  # Brief delay for DB operations
+        success, after_response = self.run_test("Get Reminders After", "GET", "reminder")
+        if not success:
+            return False
+        
+        after_count = len(after_response.get("reminders", []))
+        
+        if after_count > before_count:
+            self.log(f"✅ Prescription auto-created {after_count - before_count} reminders")
+            return True
+        else:
+            self.log(f"❌ No reminders auto-created from prescription analysis", "ERROR")
+            return False
+    
     def test_clear_chat(self):
         """Test chat history clearing"""
         success, response = self.run_test("Clear Chat History", "DELETE", f"chat/history?session_id={self.session_id}")
@@ -231,6 +392,15 @@ class MomCareAPITester:
             self.test_patterns,
             self.test_doctor_report,
             self.test_prescription_analyzer,
+            # NEW: Medication Reminder System Tests
+            self.test_reminder_creation,
+            self.test_get_reminders,
+            self.test_reminder_adherence,
+            self.test_amma_responses,
+            self.test_reminder_check,
+            self.test_reminder_logging,
+            self.test_prescription_auto_reminders,
+            self.test_reminder_deletion,
             self.test_clear_chat,
         ]
         

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { MessageCircle, LayoutDashboard, FileText, Pill, Menu, X, Heart } from "lucide-react";
+import { MessageCircle, LayoutDashboard, FileText, Pill, Menu, X, Heart, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -13,6 +13,7 @@ import {
 const navItems = [
   { path: "/", label: "Chat", icon: MessageCircle, description: "Talk to MomCareAI" },
   { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard, description: "Health insights" },
+  { path: "/reminders", label: "Reminders", icon: Bell, description: "Medicine reminders" },
   { path: "/report", label: "Report", icon: FileText, description: "Doctor report" },
   { path: "/prescription", label: "Prescription", icon: Pill, description: "Analyze prescriptions" },
 ];
