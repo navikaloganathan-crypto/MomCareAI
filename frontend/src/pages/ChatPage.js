@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
-import { Send, Trash2, Heart, AlertTriangle, Moon, Droplets, Activity, Loader2 } from "lucide-react";
+import { Send, Trash2, Heart, AlertTriangle, Moon, Droplets, Activity, Loader2, Mic, MicOff, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -73,10 +73,53 @@ function ChatBubble({ message }) {
           </div>
         )}
 
-        <p className="text-[10px] text-[#8A8887] mt-1 px-1">
-          {new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-        </p>
+        <div className="flex items-center gap-1.5 mt-1 px-1">
+          <p className="text-[10px] text-[#8A8887]">
+            {new Date(message.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+          </p>
+          {!isUser && (
+            <button
+              onClick={() => speakText(message.content)}
+              className="text-[#8A8887] hover:text-[#F4AAB9] transition-colors p-0.5"
+              data-testid="speak-message-button"
+              title="Listen to this message"
+            >
+              <Volume2 className="w-3 h-3" />
+            </button>
+          )}
+        </div>
       </div>
+    </div>
+  );
+}
+
+// ─── Voice helpers ───────────────────────────────────────────
+const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function speakText(text) {
+  if (!window.speechSynthesis || !text) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.95;
+  utterance.pitch = 1.1;
+  utterance.lang = "en-US";
+  // Prefer a female voice for the caring tone
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(
+    (v) => v.lang.startsWith("en") && v.name.toLowerCase().includes("female")
+  ) || voices.find((v) => v.lang.startsWith("en"));
+  if (preferred) utterance.voice = preferred;
+  window.speechSynthesis.speak(utterance);
+}
+
+function ListeningIndicator() {
+  return (
+    <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#F4AAB9]/10 border border-[#F4AAB9]/25 animate-fade-in" data-testid="listening-indicator">
+      <div className="relative flex items-center justify-center w-5 h-5">
+        <span className="absolute inline-flex h-full w-full rounded-full bg-[#F4AAB9]/40 animate-ping" />
+        <Mic className="relative w-3.5 h-3.5 text-[#F4AAB9]" />
+      </div>
+      <span className="text-xs font-medium text-[#F4AAB9]">Listening...</span>
     </div>
   );
 }
@@ -86,8 +129,12 @@ export default function ChatPage() {
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [warning, setWarning] = useState(null);
+  const [isListening, setIsListening] = useState(false);
+  const [voiceEnabled, setVoiceEnabled] = useState(true);
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
+  const recognitionRef = useRef(null);
+  const voiceSendRef = useRef(false);  // tracks if current send was voice-triggered
 
   useEffect(() => {
     loadHistory();
@@ -115,14 +162,16 @@ export default function ChatPage() {
     }
   };
 
-  const sendMessage = async () => {
-    const text = input.trim();
+  const sendMessage = async (overrideText) => {
+    const text = (overrideText || input).trim();
     if (!text || loading) return;
+
+    const wasVoice = voiceSendRef.current;
+    voiceSendRef.current = false;
 
     setInput("");
     setWarning(null);
 
-    // Optimistic user message
     const userMsg = {
       id: Date.now().toString(),
       role: "user",
@@ -138,7 +187,6 @@ export default function ChatPage() {
 
       if (high_risk_warning) setWarning(high_risk_warning);
 
-      // Update user message with extracted data
       setMessages((prev) => {
         const updated = [...prev];
         const lastUserIdx = updated.findLastIndex((m) => m.id === userMsg.id);
@@ -155,6 +203,11 @@ export default function ChatPage() {
           },
         ];
       });
+
+      // Voice output: speak the response if voice-enabled and this was a voice input
+      if (voiceEnabled && wasVoice && reply) {
+        speakText(reply);
+      }
     } catch (e) {
       console.error("Chat error", e);
       setMessages((prev) => [
@@ -170,6 +223,53 @@ export default function ChatPage() {
       setLoading(false);
       inputRef.current?.focus();
     }
+  };
+
+  // ─── Voice Input ────────────────────────────────────────────
+  const startListening = useCallback(() => {
+    if (!SpeechRecognition) {
+      alert("Voice input is not supported in your browser. Try Chrome or Edge.");
+      return;
+    }
+    if (isListening) {
+      recognitionRef.current?.stop();
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.maxAlternatives = 1;
+    recognitionRef.current = recognition;
+
+    recognition.onstart = () => setIsListening(true);
+
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      if (transcript.trim()) {
+        voiceSendRef.current = true;
+        setInput(transcript);
+        // Auto-send after a brief visual flash
+        setTimeout(() => {
+          sendMessage(transcript);
+        }, 300);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error", event.error);
+      setIsListening(false);
+    };
+
+    recognition.onend = () => setIsListening(false);
+
+    recognition.start();
+  }, [isListening]);
+
+  const toggleVoiceOutput = () => {
+    if (voiceEnabled) window.speechSynthesis?.cancel();
+    setVoiceEnabled((v) => !v);
   };
 
   const clearChat = async () => {
@@ -206,22 +306,40 @@ export default function ChatPage() {
           </h2>
           <p className="text-xs text-[#8A8887]">Share how you're feeling today</p>
         </div>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={clearChat}
-                className="hover:bg-[#E07A5F]/10 hover:text-[#E07A5F]"
-                data-testid="clear-chat-button"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent><p>Clear chat</p></TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div className="flex items-center gap-1">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleVoiceOutput}
+                  className={`hover:bg-[#F4AAB9]/10 ${voiceEnabled ? "text-[#F4AAB9]" : "text-[#8A8887]"}`}
+                  data-testid="voice-output-toggle"
+                >
+                  {voiceEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent><p>{voiceEnabled ? "Mute voice responses" : "Enable voice responses"}</p></TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={clearChat}
+                  className="hover:bg-[#E07A5F]/10 hover:text-[#E07A5F]"
+                  data-testid="clear-chat-button"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent><p>Clear chat</p></TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
       </div>
 
       {/* Warning banner */}
@@ -248,6 +366,7 @@ export default function ChatPage() {
               </h3>
               <p className="text-sm text-[#5C5A59] mb-8 max-w-sm mx-auto">
                 Tell me how you're feeling today. I'll track your symptoms and help you stay on top of your health.
+                <span className="block mt-2 text-[#F4AAB9] text-xs">Tap the mic to speak your message</span>
               </p>
               <div className="flex flex-wrap justify-center gap-2">
                 {quickPrompts.map((prompt) => (
@@ -274,24 +393,51 @@ export default function ChatPage() {
 
       {/* Input */}
       <div className="border-t border-[#F4AAB9]/15 bg-white/60 backdrop-blur-md px-6 py-4">
-        <div className="max-w-2xl mx-auto flex items-center gap-3">
+        {/* Listening indicator */}
+        {isListening && (
+          <div className="max-w-2xl mx-auto mb-3 flex justify-center">
+            <ListeningIndicator />
+          </div>
+        )}
+        <div className="max-w-2xl mx-auto flex items-center gap-2">
+          {/* Mic button */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  onClick={startListening}
+                  disabled={loading}
+                  variant="ghost"
+                  className={`h-11 w-11 rounded-full flex-shrink-0 transition-all duration-200 ${
+                    isListening
+                      ? "bg-[#F4AAB9] text-white shadow-md scale-110 hover:bg-[#f09aad]"
+                      : "bg-white border border-[#F4AAB9]/20 text-[#F4AAB9] hover:bg-[#F4AAB9]/10 hover:border-[#F4AAB9]/40"
+                  }`}
+                  data-testid="voice-input-button"
+                >
+                  {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent><p>{isListening ? "Stop listening" : "Speak your message"}</p></TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
           <div className="flex-1 relative">
             <textarea
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder="Tell me how you're feeling..."
+              placeholder={isListening ? "Listening..." : "Tell me how you're feeling..."}
               rows={1}
               className="w-full px-5 py-3 text-sm bg-white border border-[#F4AAB9]/20 rounded-2xl resize-none focus:outline-none focus:ring-2 focus:ring-[#F4AAB9]/30 focus:border-[#F4AAB9]/40 placeholder:text-[#8A8887] text-[#2C2A29]"
               data-testid="chat-input"
-              disabled={loading}
+              disabled={loading || isListening}
             />
           </div>
           <Button
-            onClick={sendMessage}
+            onClick={() => sendMessage()}
             disabled={!input.trim() || loading}
-            className="h-11 w-11 rounded-full bg-[#F4AAB9] hover:bg-[#f09aad] text-white shadow-sm transition-transform duration-200 hover:-translate-y-0.5"
+            className="h-11 w-11 rounded-full bg-[#F4AAB9] hover:bg-[#f09aad] text-white shadow-sm transition-transform duration-200 hover:-translate-y-0.5 flex-shrink-0"
             data-testid="chat-send-button"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
