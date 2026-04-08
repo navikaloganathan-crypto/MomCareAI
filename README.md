@@ -54,13 +54,25 @@ It provides:
 
 ## 🛠️ Tech Stack
 
-| Component | Technology | Purpose |
-|----------|-----------|--------|
-| Frontend | React + Tailwind | Fast, responsive UI |
-| Backend | Node.js + Express | API & logic handling |
-| Database | Firebase Firestore | Real-time data storage |
-| AI Engine | OpenAI GPT-4o-mini | Symptom analysis |
-| Notifications | Firebase Cloud Messaging | Alerts & reminders |
+| Layer                   | Technology                    | Description                                             |
+| ----------------------- | ----------------------------- | ------------------------------------------------------- |
+| **Frontend**            | HTML, CSS, JavaScript         | Lightweight, responsive user interface                  |
+|                         | Web Speech API                | Enables voice interaction                               |
+|                         | SpeechRecognition             | Converts voice → text input                             |
+|                         | SpeechSynthesis               | Converts text → voice output                            |
+| **Backend**             | Python                        | Core backend logic                                      |
+|                         | Flask                         | REST API framework for handling requests                |
+| **Database**            | SQLite                        | Stores structured health records, symptoms, reminders   |
+| **AI / NLP Layer**      | OpenAI GPT (GPT-4o / GPT-4.1) | Symptom analysis & natural language understanding       |
+|                         | Prompt Engineering            | Extracts structured data from user input                |
+| **Logic Layer**         | Python (Rule-based)           | Pattern detection & health analytics                    |
+|                         | Frequency Tracking            | Tracks repeated symptoms over time                      |
+|                         | Risk Flagging                 | Identifies issues like low sleep, missed medication     |
+| **APIs & Integrations** | OpenAI API                    | AI processing                                           |
+|                         | Web Speech API                | Voice input/output                                      |
+| **Data Format**         | JSON                          | Structured storage & processing of health data          |
+| **Error Handling**      | Backend Logic                 | Handles invalid input, API failures, fallback responses |
+
 
 ---
 
