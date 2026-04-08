@@ -81,7 +81,7 @@ It provides:
 
 ## 🗺️ Project Architecture
 
-![MomCareAI Architecture](./diagram-export-4-8-2026-12_11_02-PM.png)
+![MomCareAI Architecture](https://raw.githubusercontent.com/navikaloganathan-crypto/MomCareAI/main/diagram-export-4-8-2026-12_11_02-PM.png)
 
 ### 🔁 Data Flow
 
