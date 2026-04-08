@@ -92,30 +92,37 @@ graph TD
     E --> G[Pattern Detection]
     G --> H[Report Generator]
     H --> B
-
-Flow:
-User → Chat → AI Analysis → Data Storage → Pattern Detection → Report → Dashboard
+🔁 Data Flow
+User → Chat → AI Analysis → Data Storage → Pattern Detection → Report Generation → Dashboard
+📱 Screens
+💬 Chat Screen – Log symptoms naturally
+📊 Dashboard – View insights & reminders
+📋 Report Screen – Doctor-ready summaries
+✨ Live Demo
+🎥 Demo Video: Coming Soon
+🌐 Deployed Link: Coming Soon
 🚀 Quick Start
-# Clone the repository
+# Clone repository
 git clone https://github.com/navikaloganathan-crypto/momcareai.git
 cd momcareai
 
 # Install dependencies
 npm install
 
-# Run the app
+# Run app
 npm run dev
-👉 Runs on: http://localhost:3000
+👉 Runs at: http://localhost:3000
 ⚙️ Setup
 Requirements
 Node.js (v18+)
-Firebase account (free tier)
+Firebase account
 OpenAI API key
 📂 Project Structure
 momcareai/
 ├── frontend/       # React app
 ├── backend/        # Express API
 ├── docs/           # Diagrams & PPT
+│   └── architecture.png
 ├── README.md
 └── demo.mp4
 💻 Sample Code
@@ -132,24 +139,27 @@ const sendSymptom = async (message) => {
 Chat → AI → Database flow
 3 working screens
 Clear demo scenario
-GitHub repo with README
+GitHub repo ready
 🎤 Demo Flow (3 mins)
 User logs: “Headache + fatigue”
 AI analyzes & stores data
 Show dashboard insights
 Generate doctor report
-👉 “We turn conversations into clinical insights.”
+👉 “We convert conversations into clinical insights.”
 📊 Impact
-Improves early detection of health issues
-Enables better doctor-patient communication
-Supports preventive healthcare
-Indirectly improves family health by empowering mothers
-👥 Team
-Navika Loganathan – Fullstack & AI
-📧 navika.loganathan@gmail.com
-🔗 LinkedIn: https://www.linkedin.com/in/navika-loganathan
+Enables early detection of health issues
+Improves doctor-patient communication
+Encourages preventive healthcare
+Empowers women to prioritize their health
+## 👥 Team
+
+| Name | Role | Email |
+|------|------|-------|
+| Navika Loganathan | Fullstack & AI | navika.loganathan@gmail.com |
+| Yasaswini | Backend & API Integration | yasaswinibangalore@gmail.com |
+| Mythri | Frontend Development | manammythri22@gmail.com |
+| Dakshayani | Research & Documentation | k.dakshayani3022@gmail.com |
 📚 Acknowledgments
-BuildWithAI Hackathon – Presidency University
-OpenAI – AI capabilities
-Firebase – Backend infrastructure
-<div align="center"> <strong>Built with ❤️ to empower women's health</strong><br> <em>From reactive care → to proactive intelligence</em> </div> ```
+BuildWithAI Hackathon
+OpenAI
+Firebase
