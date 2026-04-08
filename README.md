@@ -81,19 +81,12 @@ It provides:
 
 ## 🗺️ Project Architecture
 
-```mermaid
-graph TD
-    A[User Input] --> B[React Frontend]
-    B --> C[Node.js API]
-    C --> D[OpenAI GPT]
-    C --> E[Firebase DB]
-    D --> F[Symptom Analysis]
-    F --> E
-    E --> G[Pattern Detection]
-    G --> H[Report Generator]
-    H --> B
-🔁 Data Flow
-User → Chat → AI Analysis → Data Storage → Pattern Detection → Report Generation → Dashboard
+## 🗺️ Project Architecture
+
+![MomCareAI Architecture](./docs/architecture.png)
+
+### 🔁 Data Flow
+User → Chat → AI Analysis → Data Storage → Pattern Detection → Report → Dashboard
 📱 Screens
 💬 Chat Screen – Log symptoms naturally
 📊 Dashboard – View insights & reminders
