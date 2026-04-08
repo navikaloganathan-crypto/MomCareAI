@@ -103,13 +103,20 @@ function speakText(text) {
   utterance.rate = 0.95;
   utterance.pitch = 1.1;
   utterance.lang = "en-US";
-  // Prefer a female voice for the caring tone
   const voices = window.speechSynthesis.getVoices();
-  const preferred = voices.find(
-    (v) => v.lang.startsWith("en") && v.name.toLowerCase().includes("female")
-  ) || voices.find((v) => v.lang.startsWith("en"));
-  if (preferred) utterance.voice = preferred;
+  if (voices.length > 0) {
+    const preferred = voices.find(
+      (v) => v.lang.startsWith("en") && v.name.toLowerCase().includes("female")
+    ) || voices.find((v) => v.lang.startsWith("en"));
+    if (preferred) utterance.voice = preferred;
+  }
   window.speechSynthesis.speak(utterance);
+}
+
+// Pre-load voices (some browsers need this)
+if (window.speechSynthesis) {
+  window.speechSynthesis.getVoices();
+  window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
 }
 
 function ListeningIndicator() {
@@ -134,7 +141,7 @@ export default function ChatPage() {
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   const recognitionRef = useRef(null);
-  const voiceSendRef = useRef(false);  // tracks if current send was voice-triggered
+  const sendMessageRef = useRef(null);  // always holds the latest sendMessage
 
   useEffect(() => {
     loadHistory();
@@ -162,12 +169,9 @@ export default function ChatPage() {
     }
   };
 
-  const sendMessage = async (overrideText) => {
+  const sendMessage = async (overrideText, fromVoice = false) => {
     const text = (overrideText || input).trim();
     if (!text || loading) return;
-
-    const wasVoice = voiceSendRef.current;
-    voiceSendRef.current = false;
 
     setInput("");
     setWarning(null);
@@ -204,9 +208,9 @@ export default function ChatPage() {
         ];
       });
 
-      // Voice output: speak the response if voice-enabled and this was a voice input
-      if (voiceEnabled && wasVoice && reply) {
-        speakText(reply);
+      // Voice output: speak the response if this was a voice input
+      if (fromVoice && voiceEnabled && reply) {
+        setTimeout(() => speakText(reply), 200);
       }
     } catch (e) {
       console.error("Chat error", e);
@@ -225,14 +229,21 @@ export default function ChatPage() {
     }
   };
 
+  // Keep ref updated so voice callbacks always use the latest sendMessage
+  sendMessageRef.current = sendMessage;
+
   // ─── Voice Input ────────────────────────────────────────────
   const startListening = useCallback(() => {
     if (!SpeechRecognition) {
-      alert("Voice input is not supported in your browser. Try Chrome or Edge.");
+      alert("Voice input is not supported in your browser. Please use Chrome or Edge.");
       return;
     }
-    if (isListening) {
-      recognitionRef.current?.stop();
+
+    // If already listening, stop
+    if (recognitionRef.current) {
+      recognitionRef.current.abort();
+      recognitionRef.current = null;
+      setIsListening(false);
       return;
     }
 
@@ -243,34 +254,61 @@ export default function ChatPage() {
     recognition.maxAlternatives = 1;
     recognitionRef.current = recognition;
 
-    recognition.onstart = () => setIsListening(true);
+    recognition.onstart = () => {
+      setIsListening(true);
+    };
 
     recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      if (transcript.trim()) {
-        voiceSendRef.current = true;
+      const transcript = event.results[0]?.[0]?.transcript;
+      if (transcript && transcript.trim()) {
         setInput(transcript);
-        // Auto-send after a brief visual flash
+        // Use the ref to always call the latest sendMessage
         setTimeout(() => {
-          sendMessage(transcript);
-        }, 300);
+          if (sendMessageRef.current) {
+            sendMessageRef.current(transcript, true);
+          }
+        }, 100);
       }
     };
 
     recognition.onerror = (event) => {
-      console.error("Speech recognition error", event.error);
+      console.error("Speech recognition error:", event.error);
       setIsListening(false);
+      recognitionRef.current = null;
+      if (event.error === "not-allowed") {
+        alert("Microphone access denied. Please allow microphone permission in your browser settings.");
+      }
     };
 
-    recognition.onend = () => setIsListening(false);
+    recognition.onend = () => {
+      setIsListening(false);
+      recognitionRef.current = null;
+    };
 
-    recognition.start();
-  }, [isListening]);
+    try {
+      recognition.start();
+    } catch (e) {
+      console.error("Failed to start recognition:", e);
+      setIsListening(false);
+      recognitionRef.current = null;
+    }
+  }, []);
 
   const toggleVoiceOutput = () => {
     if (voiceEnabled) window.speechSynthesis?.cancel();
     setVoiceEnabled((v) => !v);
   };
+
+  // Cleanup recognition on unmount
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+        recognitionRef.current = null;
+      }
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
 
   const clearChat = async () => {
     try {
