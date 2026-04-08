@@ -81,20 +81,32 @@ It provides:
 
 ## 🗺️ Project Architecture
 
-## 🗺️ Project Architecture
-
 ![MomCareAI Architecture](./docs/architecture.png)
 
 ### 🔁 Data Flow
-User → Chat → AI Analysis → Data Storage → Pattern Detection → Report → Dashboard
-📱 Screens
-💬 Chat Screen – Log symptoms naturally
-📊 Dashboard – View insights & reminders
-📋 Report Screen – Doctor-ready summaries
-✨ Live Demo
-🎥 Demo Video: Coming Soon
-🌐 Deployed Link: Coming Soon
-🚀 Quick Start
+
+User → Chat → AI Analysis → Data Storage → Pattern Detection → Report Generation → Dashboard
+
+---
+
+## 📱 Screens
+
+* 💬 **Chat Screen** – Log symptoms naturally
+* 📊 **Dashboard** – View insights & reminders
+* 📋 **Report Screen** – Doctor-ready summaries
+
+---
+
+## ✨ Live Demo
+
+* 🎥 Demo Video: *Coming Soon*
+* 🌐 Deployed Link: *Coming Soon*
+
+---
+
+## 🚀 Quick Start
+
+```bash
 # Clone repository
 git clone https://github.com/navikaloganathan-crypto/momcareai.git
 cd momcareai
@@ -104,13 +116,25 @@ npm install
 
 # Run app
 npm run dev
-👉 Runs at: http://localhost:3000
-⚙️ Setup
-Requirements
-Node.js (v18+)
-Firebase account
-OpenAI API key
-📂 Project Structure
+```
+
+👉 Runs at: `http://localhost:3000`
+
+---
+
+## ⚙️ Setup
+
+### Requirements
+
+* Node.js (v18+)
+* Firebase account
+* OpenAI API key
+
+---
+
+## 📂 Project Structure
+
+```
 momcareai/
 ├── frontend/       # React app
 ├── backend/        # Express API
@@ -118,41 +142,73 @@ momcareai/
 │   └── architecture.png
 ├── README.md
 └── demo.mp4
-💻 Sample Code
+```
+
+---
+
+## 💻 Sample Code
+
+```javascript
 const sendSymptom = async (message) => {
   const response = await openai.chat.completions.create({
     model: "gpt-4o-mini",
-    messages: [{ role: "user", content: `Analyze: ${message}` }]
+    messages: [
+      { role: "user", content: `Analyze: ${message}` }
+    ]
   });
 
   saveToFirebase(response.choices[0].message.content);
 };
-🏆 Hackathon Strategy
-✅ Must-Have (24 Hours)
-Chat → AI → Database flow
-3 working screens
-Clear demo scenario
-GitHub repo ready
-🎤 Demo Flow (3 mins)
-User logs: “Headache + fatigue”
-AI analyzes & stores data
-Show dashboard insights
-Generate doctor report
-👉 “We convert conversations into clinical insights.”
-📊 Impact
-Enables early detection of health issues
-Improves doctor-patient communication
-Encourages preventive healthcare
-Empowers women to prioritize their health
+```
+
+---
+
+## 🏆 Hackathon Strategy
+
+### ✅ Must-Have (24 Hours)
+
+* Chat → AI → Database flow
+* 3 working screens
+* Clear demo scenario
+* GitHub repository ready
+
+### 🎤 Demo Flow (3 mins)
+
+1. User logs: *“Headache + fatigue”*
+2. AI analyzes & stores data
+3. Display dashboard insights
+4. Generate doctor-ready report
+
+👉 **“We convert conversations into clinical insights.”**
+
+---
+
+## 📊 Impact
+
+* Enables early detection of health issues
+* Improves doctor–patient communication
+* Encourages preventive healthcare
+* Empowers women to prioritize their health
+
+---
+
 ## 👥 Team
 
-| Name | Role | Email |
-|------|------|-------|
-| Navika Loganathan | Fullstack & AI | navika.loganathan@gmail.com |
-| Yasaswini | Backend & API Integration | yasaswinibangalore@gmail.com |
-| Mythri | Frontend Development | manammythri22@gmail.com |
-| Dakshayani | Research & Documentation | k.dakshayani3022@gmail.com |
-📚 Acknowledgments
-BuildWithAI Hackathon
-OpenAI
-Firebase
+| Name              | Role                      | Email                                                               |
+| ----------------- | ------------------------- | ------------------------------------------------------------------- |
+| Navika Loganathan | Fullstack & AI            | [navika.loganathan@gmail.com](mailto:navika.loganathan@gmail.com)   |
+| Yasaswini         | Backend & API Integration | [yasaswinibangalore@gmail.com](mailto:yasaswinibangalore@gmail.com) |
+| Mythri            | Frontend Development      | [manammythri22@gmail.com](mailto:manammythri22@gmail.com)           |
+| Dakshayani        | Research & Documentation  | [k.dakshayani3022@gmail.com](mailto:k.dakshayani3022@gmail.com)     |
+
+---
+
+## 📚 Acknowledgments
+
+* BuildWithAI Hackathon
+* OpenAI
+* Firebase
+
+---
+
+
