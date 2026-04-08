@@ -1,0 +1,143 @@
+{
+  "theme_archetype": {
+    "domain": "Health, Wellness, Maternity",
+    "theme": "LIGHT",
+    "archetype": "Archetype 3 (Pastel & Soft) mixed with Archetype 1 (Organic & Earthy)",
+    "vibe": "Optimistic, light, tactile, calm, trusting, maternal, approachable.",
+    "anti_patterns": [
+      "No dark mode",
+      "No neon colors",
+      "No generic clinical blue/teal (#1B93A4)",
+      "No standard Vercel/Stripe stark white look",
+      "No Inter, Roboto, or Space Grotesk for headings"
+    ]
+  },
+  "colors": {
+    "background": {
+      "base": "#FCFAF8",
+      "surface": "#FFFFFF",
+      "surface_muted": "#F9F6F0"
+    },
+    "brand": {
+      "primary": "#F4AAB9",
+      "secondary": "#FCD8B8",
+      "accent": "#A8C3A6"
+    },
+    "text": {
+      "primary": "#2C2A29",
+      "secondary": "#5C5A59",
+      "muted": "#8A8887"
+    },
+    "semantic": {
+      "success": "#A8C3A6",
+      "warning": "#F4D06F",
+      "error": "#E07A5F",
+      "info": "#9CB4D4"
+    },
+    "rules": [
+      "Use 'Tinted Grey' rule: tint neutral greys with warm tones.",
+      "Never use pure #000000 or #808080.",
+      "Ensure text contrast ratios (4.5:1 for normal text).",
+      "Use primary color ONLY for CTAs like buttons and active states."
+    ]
+  },
+  "typography": {
+    "fonts": {
+      "heading": "Outfit, sans-serif",
+      "body": "Figtree, sans-serif"
+    },
+    "scales": {
+      "h1": "text-4xl sm:text-5xl lg:text-5xl font-semibold tracking-tight leading-tight",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl font-medium tracking-tight",
+      "h3": "text-xl sm:text-2xl font-medium",
+      "h4": "text-lg sm:text-xl font-medium",
+      "body": "text-base leading-relaxed text-[#2C2A29]",
+      "small": "text-sm text-[#5C5A59]",
+      "overline": "text-xs font-bold uppercase tracking-[0.2em] text-[#8A8887]"
+    },
+    "rules": [
+      "Do not use bold for every header. Optimize for Character and Tension.",
+      "Headlines > 32px MUST use tracking-tight.",
+      "Hierarchy Gap Rule: jump between heading and subheading must not exceed 2 Tailwind steps."
+    ]
+  },
+  "layout_spacing": {
+    "grid": {
+      "dashboard": "Control Room Grid: grid-cols-1 md:grid-cols-3 lg:grid-cols-4, tight gaps (gap-4 or gap-6)",
+      "marketing": "Tetris Grid: grid-cols-1 md:grid-cols-8 lg:grid-cols-12, wide gaps (gap-8 to gap-12)"
+    },
+    "spacing": {
+      "generous": "p-4, p-6, p-8, p-12, p-16. Use 2-3x more spacing than typical designs.",
+      "containers": "Containers with borders must have internal padding (p-6 or p-8)."
+    },
+    "surface": {
+      "style": "Neumorphism (Tactile) / Flat Solid",
+      "radius": "rounded-2xl or rounded-3xl for soft, approachable feel",
+      "shadows": "Soft diffuse ambient shadows shadow-sm or shadow-md with 1px delicate inner stroke or border-black/5"
+    },
+    "rules": [
+      "Mobile-First: Always start with grid-cols-1.",
+      "Optical Alignment over geometrical alignment.",
+      "Avoid default Bootstrap columns, embrace asymmetry where applicable."
+    ]
+  },
+  "component_rules": {
+    "chat_interface": "Clean simple chat UI. Bubble for AI in soft pink surface, user in warm white/grey. Ample padding.",
+    "cards": "Go flat, rectangular with rounded-3xl, subtle warm borders (border-[#F4AAB9]/20). Avoid heavy card drop shadows.",
+    "buttons": "Pill-shaped (rounded-full). Primary buttons use #F4AAB9 background with #2C2A29 text for contrast or high contrast white if accessible.",
+    "shadcn_customization": "Override Vercel-look. Remove harsh borders, add rounded-2xl or rounded-3xl, replace generic grays with warm tinted greys.",
+    "navigation": "Header must have a solid or semi-solid background (bg-[#FCFAF8]/90 backdrop-blur-md). Navigation links visible on desktop."
+  },
+  "motion_interactions": {
+    "animations": "Minimalist micro-interactions. Hover states lift slightly (-translate-y-1) with soft shadow increase.",
+    "transitions": "Use specific properties: transition: transform 0.2s ease, opacity 0.2s ease. No transition: all.",
+    "accessibility": "MUST respect prefers-reduced-motion."
+  },
+  "icons_assets": {
+    "library": "lucide-react (default choice) or iconoir-react for soft, approachable lines.",
+    "styling": "Icons should be rounded, using stroke widths of 1.5 or 2."
+  },
+  "media_urls": {
+    "hero_background": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/6c2c1311-2b4d-4765-870a-b58a413ac363/images/15ab65d60336dc74e9fb19f90c3958f290f690fc193f74e9445405da3249bf1d.png",
+      "description": "Abstract soft flowing liquid background in pastel pink, warm white, and soft peach colors."
+    },
+    "ai_chat_icon": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/6c2c1311-2b4d-4765-870a-b58a413ac363/images/0d370b6d65885789883eab68b5b3a6f89eb66c0d8f66b917fc01d4ada4d36700.png",
+      "description": "Minimalist 3D illustration of a chat bubble with a heart inside, floating gently on a soft peach background."
+    },
+    "health_report_icon": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/6c2c1311-2b4d-4765-870a-b58a413ac363/images/7ab6e5325456c12c4a72cf69315492e3487e22bbc9bcb91b73ba1d982965ccb0.png",
+      "description": "Minimalist 3D illustration of a medical clipboard and a stethoscope floating gently on a soft pink background."
+    },
+    "mother_baby_portrait_1": {
+      "url": "https://images.unsplash.com/photo-1761891954120-7dce2a8bd06c?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MDV8MHwxfHNlYXJjaHwxfHxtb3RoZXIlMjBhbmQlMjBiYWJ5JTIwcG9ydHJhaXQlMjBzb2Z0JTIwbGlnaHRpbmd8ZW58MHx8fHwxNzc1NjU0NzMwfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Mother holding her sleeping newborn baby"
+    },
+    "mother_baby_portrait_2": {
+      "url": "https://images.unsplash.com/photo-1761891949068-55041bf5a516?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2MDV8MHwxfHNlYXJjaHwzfHxtb3RoZXIlMjBhbmQlMjBiYWJ5JTIwcG9ydHJhaXQlMjBzb2Z0JTIwbGlnaHRpbmd8ZW58MHx8fHwxNzc1NjU0NzMwfDA&ixlib=rb-4.1.0&q=85",
+      "description": "Parents holding their newborn baby with love"
+    },
+    "doctor_avatar_1": {
+      "url": "https://images.pexels.com/photos/18828741/pexels-photo-18828741.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Portrait of a smiling female doctor in a lab coat and stethoscope"
+    },
+    "doctor_avatar_2": {
+      "url": "https://images.pexels.com/photos/32254662/pexels-photo-32254662.jpeg?auto=compress&cs=tinysrgb&dpr=2&h=650&w=940",
+      "description": "Smiling doctor in lab coat with stethoscope"
+    }
+  },
+  "accessibility_rules": [
+    "All interactive and key informational elements MUST include a 'data-testid' attribute (e.g., data-testid='chat-submit-button').",
+    "Meet contrast ratios: prefer APCA over WCAG 2.",
+    "ALWAYS explicitly set text color on hover. Hover state color must be a lighter hue of ACTIVE state color."
+  ],
+  "instructions_to_main_agent": [
+    "Install and set up Outfit and Figtree fonts from Google Fonts.",
+    "Override default Tailwind theme with the colors specified in this guideline.",
+    "Build the AI Chat interface as the central core feature, surrounded by soft dashboard elements for Symptom Tracking and Pattern Detection.",
+    "Apply generous padding (p-6, p-8) and soft border radii (rounded-2xl) to all cards.",
+    "Never use dark mode as requested by the user.",
+    "Use provided media URLs to populate empty states, report icons, and chat avatars."
+  ]
+}
