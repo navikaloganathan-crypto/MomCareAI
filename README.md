@@ -13,7 +13,7 @@ Built for **INNOVATEX 4.0 – BuildWithAI 24 Hour International Innovation Hacka
 
 ### 🚨 Problem
 
-Mthers often struggle to consistently track and manage their health due to busy lifestyles and lack of structured tools.
+Mothers often struggle to consistently track and manage their health due to busy lifestyles and lack of structured tools.
 
 Health data remains fragmented and memory-based. When visiting doctors, many are unable to clearly recall symptoms or patterns, leading to:
 - Incomplete diagnosis  
