@@ -85,9 +85,23 @@ It provides:
 
 ## 📱 Screens
 
-- 💬 **Chat Screen** – Log symptoms naturally  
-- 📊 **Dashboard** – View insights & reminders  
-- 📋 **Report Screen** – Doctor-friendly summaries  
+### 💬 Chat — Log symptoms naturally
+![Chat Screen](Screenshot_2026-04-09_at_10.16.08.png)
+![Chat with chest pain](Screenshot_2026-04-09_at_10.12.44.png)
+
+### 📊 Dashboard — Weekly health overview
+![Dashboard](Screenshot_2026-04-09_at_10.16.24.png)
+![Symptom frequency](Screenshot_2026-04-09_at_10.16.31.png)
+
+### 🔔 Reminders — Medicine tracking
+![Reminders](Screenshot_2026-04-09_at_10.16.38.png)
+
+### 📋 Report — Doctor-ready summary
+![Doctor Report](Screenshot_2026-04-09_at_10.16.49.png)
+![Report timeline](Screenshot_2026-04-09_at_10.16.53.png)
+
+### 💊 Prescription Analyzer
+![Prescription](Screenshot_2026-04-09_at_10.17.06.png)
 
 ---
 
