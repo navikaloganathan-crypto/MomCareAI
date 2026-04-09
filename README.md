@@ -117,21 +117,6 @@ User → Chat → AI Analysis → Data Storage → Pattern Detection → Report 
 
 ---
 
-## 📱 Screens
-
-* 💬 **Chat Screen** – Log symptoms naturally
-* 📊 **Dashboard** – View insights & reminders
-* 📋 **Report Screen** – Doctor-ready summaries
-
----
-
-## ✨ Live Demo
-
-* 🎥 Demo Video: *Coming Soon*
-* 🌐 Deployed Link: *Coming Soon*
-
----
-
 ## 🚀 Quick Start
 
 ```bash
