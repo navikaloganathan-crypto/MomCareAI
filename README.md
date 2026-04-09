@@ -86,22 +86,22 @@ It provides:
 ## 📱 Screens
 
 ### 💬 Chat — Log symptoms naturally
-![Chat Screen](Screenshot_2026-04-09_at_10.16.08.png)
-![Chat with chest pain](Screenshot_2026-04-09_at_10.12.44.png)
+![Chat Screen](Screenshot%202026-04-09%20at%2010.12.44.png)
+![Chat with chest pain](Screenshot%202026-04-09%20at%2010.16.08.png)
 
 ### 📊 Dashboard — Weekly health overview
-![Dashboard](Screenshot_2026-04-09_at_10.16.24.png)
-![Symptom frequency](Screenshot_2026-04-09_at_10.16.31.png)
+![Dashboard](Screenshot%202026-04-09%20at%2010.16.24.png)
+![Symptom frequency](Screenshot%202026-04-09%20at%2010.16.31.png)
 
 ### 🔔 Reminders — Medicine tracking
-![Reminders](Screenshot_2026-04-09_at_10.16.38.png)
+![Reminders](Screenshot%202026-04-09%20at%2010.16.38.png)
 
 ### 📋 Report — Doctor-ready summary
-![Doctor Report](Screenshot_2026-04-09_at_10.16.49.png)
-![Report timeline](Screenshot_2026-04-09_at_10.16.53.png)
+![Doctor Report](Screenshot%202026-04-09%20at%2010.16.49.png)
+![Report timeline](Screenshot%202026-04-09%20at%2010.16.53.png)
 
 ### 💊 Prescription Analyzer
-![Prescription](Screenshot_2026-04-09_at_10.17.06.png)
+![Prescription](Screenshot%202026-04-09%20at%2010.17.06.png)
 
 ---
 
