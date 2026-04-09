@@ -1,0 +1,1387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MomCareAI — Your Health Companion</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* ════════════════════════════════════════════ */
+        /* GLOBAL STYLES                                */
+        /* ════════════════════════════════════════════ */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #e91e8c;
+            --primary-dark: #c2185b;
+            --primary-light: #fce4ec;
+            --secondary: #7c4dff;
+            --accent: #00bcd4;
+            --success: #4caf50;
+            --warning: #ff9800;
+            --danger: #f44336;
+            --bg: #fafafa;
+            --card: #ffffff;
+            --text: #333;
+            --text-light: #666;
+            --border: #e0e0e0;
+            --shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: linear-gradient(135deg, #fce4ec 0%, #f3e5f5 50%, #e3f2fd 100%);
+            min-height: 100vh;
+            color: var(--text);
+        }
+        
+        /* ════════════════════════════════════════════ */
+        /* HEADER                                       */
+        /* ════════════════════════════════════════════ */
+        header {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: white;
+            padding: 0;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-inner {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 25px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .logo-icon {
+            font-size: 36px;
+            animation: heartbeat 2s infinite;
+        }
+        
+        @keyframes heartbeat {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        .logo h1 {
+            font-size: 22px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+        }
+        
+        .logo p {
+            font-size: 12px;
+            opacity: 0.85;
+        }
+        
+        .header-stats {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .stat-pill {
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            padding: 6px 14px;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .stat-pill:hover { background: rgba(255,255,255,0.3); }
+        
+        .alert-badge {
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+        
+        /* ════════════════════════════════════════════ */
+        /* NAVIGATION TABS                              */
+        /* ════════════════════════════════════════════ */
+        .nav-tabs {
+            display: flex;
+            background: white;
+            border-bottom: 2px solid var(--border);
+            padding: 0 25px;
+            overflow-x: auto;
+            position: sticky;
+            top: 70px;
+            z-index: 99;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .nav-tab {
+            padding: 14px 20px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-light);
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .nav-tab:hover { color: var(--primary); }
+        
+        .nav-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        
+        /* ════════════════════════════════════════════ */
+        /* MAIN CONTENT                                 */
+        /* ════════════════════════════════════════════ */
+        .main-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 25px;
+        }
+        
+        .page { display: none; }
+        .page.active { display: block; }
+        
+        /* ════════════════════════════════════════════ */
+        /* CARDS                                        */
+        /* ════════════════════════════════════════════ */
+        .card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: var(--shadow);
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary-light);
+        }
+        
+        .card-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .card-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+        
+        .card-subtitle {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+        
+        /* ════════════════════════════════════════════ */
+        /* DASHBOARD GRID                               */
+        /* ════════════════════════════════════════════ */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            border-left: 4px solid var(--primary);
+            transition: transform 0.2s;
+        }
+        
+        .metric-card:hover { transform: translateY(-3px); }
+        .metric-card:nth-child(2) { border-left-color: var(--secondary); }
+        .metric-card:nth-child(3) { border-left-color: var(--accent); }
+        .metric-card:nth-child(4) { border-left-color: var(--success); }
+        .metric-card:nth-child(5) { border-left-color: var(--warning); }
+        
+        .metric-number {
+            font-size: 36px;
+            font-weight: 800;
+            color: var(--primary);
+            line-height: 1;
+        }
+        
+        .metric-card:nth-child(2) .metric-number { color: var(--secondary); }
+        .metric-card:nth-child(3) .metric-number { color: var(--accent); }
+        .metric-card:nth-child(4) .metric-number { color: var(--success); }
+        .metric-card:nth-child(5) .metric-number { color: var(--warning); }
+        
+        .metric-label {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 8px;
+            font-weight: 500;
+        }
+        
+        .metric-icon { font-size: 24px; margin-bottom: 8px; }
+        
+        /* ════════════════════════════════════════════ */
+        /* TWO-COLUMN LAYOUT                            */
+        /* ════════════════════════════════════════════ */
+        .two-col {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .two-col { grid-template-columns: 1fr; }
+            .header-stats { display: none; }
+        }
+        
+        /* ════════════════════════════════════════════ */
+        /* VOICE SECTION                                */
+        /* ════════════════════════════════════════════ */
+        .voice-container {
+            text-align: center;
+        }
+        
+        .voice-button {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            cursor: pointer;
+            font-size: 40px;
+            color: white;
+            box-shadow: 0 8px 30px rgba(233, 30, 140, 0.4);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+        
+        .voice-button:hover { transform: scale(1.05); }
+        
+        .voice-button.listening {
+            animation: pulse 1.5s infinite;
+            background: linear-gradient(135deg, #f44336, #e91e63);
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(233, 30, 140, 0.6); }
+            70% { box-shadow: 0 0 0 20px rgba(233, 30, 140, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(233, 30, 140, 0); }
+        }
+        
+        .voice-status {
+            font-size: 14px;
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+        
+        .voice-status.listening {
+            color: var(--danger);
+            font-weight: 600;
+        }
+        
+        /* ════════════════════════════════════════════ */
+        /* CONVERSATION BOX                             */
+        /* ════════════════════════════════════════════ */
+        .conversation-box {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 16px;
+            height: 300px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+        }
+        
+        .message {
+            margin-bottom: 14px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .message.user { align-items: flex-end; }
+        .message.ai { align-items: flex-start; }
+        
+        .message-bubble {
+            max-width: 80%;
+            padding: 10px 14px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        
+        .message.user .message-bubble {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .message.ai .message-bubble {
+            background: white;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        
+        .message-label {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-bottom: 4px;
+        }
+        
+        /* ════════════════════════════════════════════ */
+        /* TEXT INPUT                                   */
+        /* ════════════════════════════════════════════ */
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        
+        .text-input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        
+        .text-input:focus { border-color: var(--primary); }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+        }
+        
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 15px rgba(233,30,140,0.3); }
+        
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        
+        .btn-secondary:hover { background: var(--primary-light); }
+        
+        .btn-success {
+            background: linear-gradient(135deg, var(--success), #388e3c);
+            color: white;
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, var(--warning), #f57c00);
+            color: white;
+        }
+        
+        .btn-sm { padding: 8px 14px; font-size: 12px; }
+        
+        /* ════════════════════════════════════════════ */
+        /* HEALTH LOG FORM                              */
+        /* ════════════════════════════════════════════ */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .form-group label {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+        
+        .form-control {
+            padding: 10px 14px;
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        
+        .form-control:focus { border-color: var(--primary); }
+        
+        textarea.form-control {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        
+        /* ════════════════════════════════════════════ */
+        /* ALERTS & PATTERNS                            */
+        /* ════════════════════════════════════════════ */
+        .alert-item {
+            padding: 14px 16px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            border-left: 4px solid;
+        }
+        
+        .alert-item.critical {
+            background: #fff3f3;
+            border-left-color: var(--danger);
+        }
+        
+        .alert-item.warning {
+            background: #fff8e1;
+            border-left-color: var(--warning);
+        }
+        
+        .alert-item.good {
+            background: #f1f8e9;
+            border-left-color: var(--success);
+        }
+        
+        .alert-item.info {
+            background: #e3f2fd;
+            border-left-color: var(--accent);
+        }
+        
+        .alert-icon { font-size: 20px; }
+        
+        .alert-content { flex: 1; }
+        
+        .alert-message {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .alert-recommendation {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+        
+        .alert-dismiss {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-light);
+            padding: 0;
+        }
+        
+        /* ════════════════════════════════════════════ */
+        /* MEDICATION CARDS                             */
+        /* ════════════════════════════════════════════ */
+        .medication-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+        }
+        
+        .medication-card {
+            background: white;
+            border-radius: 14px;
+            padding: 18px;
+            border: 2px solid var(--border);
+            transition: all 0.2s;
+            position: relative;
+        }
+        
+        .medication-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+        
+        .med-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+        
+        .med-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: var(--primary-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+        }
+        
+        .med-name {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+        
+        .med-dosage {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+        
+        .med-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+        
+        .med-detail {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .med-detail-label {
+            font-size: 10px;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .med-detail-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .reminder-times {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+        
+        .time-badge {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .med-status {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .med-status.active {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        /* ════════════════════════════════════════════ */
+        /* PRESCRIPTION UPLOAD                          */
+        /* ════════════════════════════════════════════ */
+        .prescription-area {
+            border: 3px dashed var(--primary);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            background: var(--primary-light);
+            margin-bottom: 20px;
+            transition: all 0.2s;
+        }
+        
+        .prescription-area:hover {
+            background: #f8bbd0;
+        }
+        
+        .prescription-icon { font-size: 48px; margin-bottom: 12px; }
+        
+        .prescription-text h3 {
+            font-size: 18px;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+        }
+        
+        .prescription-text p {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+        
+        .prescription-textarea {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: 'Courier New', monospace;
+            outline: none;
+            resize: vertical;
+            min-height: 200px;
+            margin-top: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        .prescription-textarea:focus { border-color: var(--primary); }
+        
+        /* ════════════════════════════════════════════ */
+        /* DOCTOR SUMMARY                               */
+        /* ════════════════════════════════════════════ */
+        .summary-section {
+            margin-bottom: 20px;
+        }
+        
+        .summary-section h3 {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary-light);
+        }
+        
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 6px;
+        }
+        
+        .summary-key {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+        
+        .summary-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .symptom-frequency {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 6px;
+        }
+        
+        .freq-bar {
+            flex: 1;
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .freq-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 4px;
+        }
+        
+        /* ════════════════════════════════════════════ */
+        /* LOADING STATE                                */
+        /* ════════════════════════════════════════════ */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 20px;
+            color: var(--text-light);
+        }
+        
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* ════════════════════════════════════════════ */
+        /* NOTIFICATION TOAST                           */
+        /* ════════════════════════════════════════════ */
+        .toast-container {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .toast {
+            background: white;
+            border-radius: 12px;
+            padding: 14px 18px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 300px;
+            max-width: 400px;
+            animation: slideIn 0.3s ease;
+            border-left: 4px solid var(--success);
+        }
+        
+        .toast.error { border-left-color: var(--danger); }
+        .toast.warning { border-left-color: var(--warning); }
+        .toast.medication { border-left-color: var(--secondary); }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .toast-icon { font-size: 24px; }
+        
+        .toast-text { flex: 1; }
+        .toast-title { font-size: 14px; font-weight: 700; }
+        .toast-message { font-size: 12px; color: var(--text-light); }
+        
+        .toast-close {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: var(--text-light);
+        }
+        
+        /* ════════════════════════════════════════════ */
+        /* LOGS TABLE                                   */
+        /* ════════════════════════════════════════════ */
+        .logs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        
+        .logs-table th {
+            text-align: left;
+            padding: 10px 14px;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            font-weight: 700;
+            border-bottom: 2px solid var(--primary);
+        }
+        
+        .logs-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+        
+        .logs-table tr:hover td { background: #fafafa; }
+        
+        .severity-badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        
+        .severity-badge.mild { background: #e8f5e9; color: #2e7d32; }
+        .severity-badge.moderate { background: #fff3e0; color: #e65100; }
+        .severity-badge.severe { background: #ffebee; color: #c62828; }
+        
+        /* ════════════════════════════════════════════ */
+        /* EMPTY STATE                                  */
+        /* ════════════════════════════════════════════ */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-light);
+        }
+        
+        .empty-icon { font-size: 48px; margin-bottom: 16px; }
+        
+        .empty-state h3 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+        
+        /* ════════════════════════════════════════════ */
+        /* ANALYSIS PENDING                             */
+        /* ════════════════════════════════════════════ */
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+        }
+        
+        .quick-action-btn {
+            padding: 8px 14px;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            border: 1px solid var(--primary);
+            border-radius: 20px;
+            font-size: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .quick-action-btn:hover { background: var(--primary); color: white; }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- HEADER                                              -->
+<!-- ═══════════════════════════════════════════════════ -->
+<header>
+    <div class="header-inner">
+        <div class="logo">
+            <span class="logo-icon">💗</span>
+            <div>
+                <h1>MomCareAI</h1>
+                <p>Your Intelligent Health Companion</p>
+            </div>
+        </div>
+        <div class="header-stats">
+            <div class="stat-pill" onclick="switchPage('dashboard')">
+                📊 <span id="header-logs">0</span> Logs
+            </div>
+            <div class="stat-pill" onclick="switchPage('medications')">
+                💊 <span id="header-meds">0</span> Meds
+            </div>
+            <div class="stat-pill" onclick="switchPage('analysis')" id="alert-pill">
+                🔔 <span id="header-alerts">0</span> Alerts
+                <span class="alert-badge" id="alert-badge" style="display:none">!</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- NAVIGATION TABS                                     -->
+<!-- ═══════════════════════════════════════════════════ -->
+<nav class="nav-tabs">
+    <div class="nav-tab active" onclick="switchPage('dashboard')" id="tab-dashboard">
+        🏠 Dashboard
+    </div>
+    <div class="nav-tab" onclick="switchPage('voice')" id="tab-voice">
+        🎙️ Health Log
+    </div>
+    <div class="nav-tab" onclick="switchPage('prescription')" id="tab-prescription">
+        📋 Prescription
+    </div>
+    <div class="nav-tab" onclick="switchPage('medications')" id="tab-medications">
+        💊 Medications
+    </div>
+    <div class="nav-tab" onclick="switchPage('analysis')" id="tab-analysis">
+        📈 Analysis
+    </div>
+    <div class="nav-tab" onclick="switchPage('summary')" id="tab-summary">
+        📄 Doctor Summary
+    </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- MAIN CONTENT                                        -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="main-content">
+
+    <!-- ─── DASHBOARD PAGE ─────────────────────────── -->
+    <div id="page-dashboard" class="page active">
+        <div class="dashboard-grid" id="metrics-grid">
+            <div class="metric-card">
+                <div class="metric-icon">📝</div>
+                <div class="metric-number" id="metric-today">0</div>
+                <div class="metric-label">Today's Logs</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">📅</div>
+                <div class="metric-number" id="metric-week">0</div>
+                <div class="metric-label">This Week</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">💊</div>
+                <div class="metric-number" id="metric-meds">0</div>
+                <div class="metric-label">Active Medications</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">😴</div>
+                <div class="metric-number" id="metric-sleep">—</div>
+                <div class="metric-label">Avg Sleep (hrs)</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-icon">🔔</div>
+                <div class="metric-number" id="metric-alerts">0</div>
+                <div class="metric-label">Unread Alerts</div>
+            </div>
+        </div>
+        
+        <div class="two-col">
+            <!-- Sleep & Pain Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📈</div>
+                    <div>
+                        <div class="card-title">Weekly Health Trends</div>
+                        <div class="card-subtitle">Sleep hours and pain levels</div>
+                    </div>
+                </div>
+                <canvas id="health-chart" height="200"></canvas>
+            </div>
+            
+            <!-- Today's Log -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📋</div>
+                    <div>
+                        <div class="card-title">Today's Health Log</div>
+                        <div class="card-subtitle">Your entries for today</div>
+                    </div>
+                </div>
+                <div id="today-logs-container">
+                    <div class="loading">
+                        <div class="spinner"></div> Loading...
+                    </div>
+                </div>
+                <div style="margin-top: 16px;">
+                    <button class="btn btn-primary" onclick="switchPage('voice')" style="width:100%">
+                        ➕ Add Health Log
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Medication Reminders Today -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">💊</div>
+                <div>
+                    <div class="card-title">Today's Medication Schedule</div>
+                    <div class="card-subtitle">Your medication reminders</div>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="switchPage('prescription')" style="margin-left:auto">
+                    + Add Prescription
+                </button>
+            </div>
+            <div id="dashboard-meds-container">
+                <div class="loading"><div class="spinner"></div> Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── VOICE / HEALTH LOG PAGE ────────────────── -->
+    <div id="page-voice" class="page">
+        <div class="two-col">
+            <!-- Voice Input Card -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🎙️</div>
+                    <div>
+                        <div class="card-title">Voice Health Logger</div>
+                        <div class="card-subtitle">Speak or type your symptoms</div>
+                    </div>
+                </div>
+                
+                <!-- Voice Button -->
+                <div class="voice-container" style="margin-bottom: 20px;">
+                    <button class="voice-button" id="voice-btn" onclick="toggleVoice()">
+                        🎙️
+                    </button>
+                    <div class="voice-status" id="voice-status">
+                        Click microphone to start speaking
+                    </div>
+                    
+                    <!-- Quick prompts -->
+                    <div class="quick-actions">
+                        <button class="quick-action-btn" onclick="fillPrompt('I have a headache and feeling tired')">😣 Headache</button>
+                        <button class="quick-action-btn" onclick="fillPrompt('I have period cramps and back pain')">🔴 Period Pain</button>
+                        <button class="quick-action-btn" onclick="fillPrompt('I feel nauseous and have no appetite')">🤢 Nausea</button>
+                        <button class="quick-action-btn" onclick="fillPrompt('I am feeling anxious and stressed today')">😰 Anxiety</button>
+                        <button class="quick-action-btn" onclick="fillPrompt('I slept only 4 hours last night')">😴 Sleep Issue</button>
+                        <button class="quick-action-btn" onclick="fillPrompt('My blood pressure is 140/90 today')">❤️ High BP</button>
+                    </div>
+                </div>
+                
+                <!-- Conversation -->
+                <div class="conversation-box" id="conversation-box">
+                    <div class="message ai">
+                        <div class="message-label">💗 MomCareAI</div>
+                        <div class="message-bubble">
+                            Hello! I'm MomCareAI, your personal health companion. 
+                            How are you feeling today? You can speak to me using the microphone 
+                            or type your symptoms below. I'm here to help you track and understand your health! 🌸
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Text Input -->
+                <div class="input-group">
+                    <input type="text" class="text-input" id="text-input" 
+                           placeholder="Type your symptoms here..." 
+                           onkeypress="handleKeyPress(event)">
+                    <button class="btn btn-primary" onclick="sendText()">Send 📤</button>
+                </div>
+            </div>
+            
+            <!-- Manual Log Form -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📝</div>
+                    <div>
+                        <div class="card-title">Detailed Health Log</div>
+                        <div class="card-subtitle">Log specific health measurements</div>
+                    </div>
+                </div>
+                
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Symptoms (comma-separated)</label>
+                        <input type="text" class="form-control" id="form-symptoms" 
+                               placeholder="headache, fatigue, nausea">
+                    </div>
+                    <div class="form-group">
+                        <label>Current Mood</label>
+                        <select class="form-control" id="form-mood">
+                            <option value="">Select mood</option>
+                            <option value="happy">😊 Happy</option>
+                            <option value="calm">😌 Calm</option>
+                            <option value="neutral">😐 Neutral</option>
+                            <option value="anxious">😰 Anxious</option>
+                            <option value="sad">😢 Sad</option>
+                            <option value="irritable">😤 Irritable</option>
+                            <option value="exhausted">😩 Exhausted</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Pain Level (1-10)</label>
+                        <input type="number" class="form-control" id="form-pain" 
+                               min="0" max="10" placeholder="0 = no pain">
+                    </div>
+                    <div class="form-group">
+                        <label>Sleep Hours Last Night</label>
+                        <input type="number" class="form-control" id="form-sleep" 
+                               min="0" max="24" step="0.5" placeholder="7.5">
+                    </div>
+                    <div class="form-group">
+                        <label>Blood Pressure (e.g., 120/80)</label>
+                        <input type="text" class="form-control" id="form-bp" 
+                               placeholder="120/80">
+                    </div>
+                    <div class="form-group">
+                        <label>Temperature (°C)</label>
+                        <input type="number" class="form-control" id="form-temp" 
+                               step="0.1" placeholder="37.0">
+                    </div>
+                </div>
+                
+                <div class="form-group" style="margin-top: 16px;">
+                    <label>Additional Notes</label>
+                    <textarea class="form-control" id="form-notes" 
+                              placeholder="Any other symptoms or notes..."></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button class="btn btn-primary" onclick="saveHealthLog()">
+                        💾 Save Health Log
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearForm()">
+                        🗑️ Clear
+                    </button>
+                </div>
+                
+                <!-- Recent Log Preview -->
+                <div id="save-confirmation" style="display:none; margin-top:16px;"></div>
+            </div>
+        </div>
+        
+        <!-- Recent Logs Table -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">📜</div>
+                <div>
+                    <div class="card-title">Recent Health Logs</div>
+                    <div class="card-subtitle">Your last 7 days of health entries</div>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="loadRecentLogs()" style="margin-left:auto">
+                    🔄 Refresh
+                </button>
+            </div>
+            <div style="overflow-x:auto;">
+                <table class="logs-table">
+                    <thead>
+                        <tr>
+                            <th>Date & Time</th>
+                            <th>Symptoms</th>
+                            <th>Mood</th>
+                            <th>Pain</th>
+                            <th>Sleep</th>
+                            <th>BP</th>
+                            <th>Severity</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logs-table-body">
+                        <tr>
+                            <td colspan="7">
+                                <div class="loading"><div class="spinner"></div> Loading logs...</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── PRESCRIPTION PAGE ──────────────────────── -->
+    <div id="page-prescription" class="page">
+        <div class="two-col">
+            <!-- Upload Prescription -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">📋</div>
+                    <div>
+                        <div class="card-title">Upload Prescription</div>
+                        <div class="card-subtitle">AI will extract and schedule your medications</div>
+                    </div>
+                </div>
+                
+                <div class="prescription-area">
+                    <div class="prescription-icon">📄</div>
+                    <div class="prescription-text">
+                        <h3>Enter Prescription Details</h3>
+                        <p>Type or paste your doctor's prescription below.<br>
+                        MomCareAI will extract medicines and set up smart reminders.</p>
+                    </div>
+                </div>
+                
+                <textarea class="prescription-textarea" id="prescription-text" 
+                          placeholder="Paste your prescription here... Example:
+
+Dr. Sarah Johnson - City Medical Center
+Patient: Jane Doe
+Diagnosis: Upper Respiratory Infection + Iron Deficiency
+
+1. Amoxicillin 500mg - Three times daily after meal for 7 days
+2. Paracetamol 500mg - Twice daily after food for 5 days  
+3. Iron 325mg - Once daily before meal for 30 days
+4. Vitamin C 500mg - Once daily with food for 30 days
+
+Notes: Take all medicines with plenty of water. 
+Return for follow-up in 7 days."></textarea>
+                
+                <div style="margin-top: 16px;">
+                    <button class="btn btn-primary" onclick="uploadPrescription()" style="width:100%">
+                        🔍 Analyze Prescription & Set Reminders
+                    </button>
+                </div>
+                
+                <!-- Sample Prescriptions Quick Load -->
+                <div style="margin-top: 16px;">
+                    <p style="font-size:12px; color:var(--text-light); margin-bottom:8px;">Try sample prescriptions:</p>
+                    <div class="quick-actions">
+                        <button class="quick-action-btn" onclick="loadSamplePrescription('basic')">
+                            Basic Prescription
+                        </button>
+                        <button class="quick-action-btn" onclick="loadSamplePrescription('pregnancy')">
+                            Pregnancy Vitamins
+                        </button>
+                        <button class="quick-action-btn" onclick="loadSamplePrescription('bp')">
+                            Blood Pressure
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Prescription Results -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">✅</div>
+                    <div>
+                        <div class="card-title">Parsed Results</div>
+                        <div class="card-subtitle">Extracted medication information</div>
+                    </div>
+                </div>
+                <div id="prescription-results">
+                    <div class="empty-state">
+                        <div class="empty-icon">🔍</div>
+                        <h3>No prescription analyzed yet</h3>
+                        <p>Upload a prescription to see extracted medications and reminders</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── MEDICATIONS PAGE ───────────────────────── -->
+    <div id="page-medications" class="page">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">💊</div>
+                <div>
+                    <div class="card-title">Active Medications</div>
+                    <div class="card-subtitle">Your current medication schedule with smart reminders</div>
+                </div>
+                <button class="btn btn-primary btn-sm" onclick="switchPage('prescription')" style="margin-left:auto">
+                    + Add Prescription
+                </button>
+            </div>
+            
+            <div id="medications-container">
+                <div class="loading"><div class="spinner"></div> Loading medications...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── ANALYSIS PAGE ─────────────────────────── -->
+    <div id="page-analysis" class="page">
+        <div class="two-col">
+            <!-- Patterns -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🔍</div>
+                    <div>
+                        <div class="card-title">Pattern Detection</div>
+                        <div class="card-subtitle">AI-detected health patterns</div>
+                    </div>
+                    <select id="analysis-days" class="form-control" style="width:auto; margin-left:auto; padding:6px 10px;" onchange="loadAnalysis()">
+                        <option value="7">Last 7 days</option>
+                        <option value="14">Last 14 days</option>
+                        <option value="30">Last 30 days</option>
+                    </select>
+                </div>
+                <div id="patterns-container">
+                    <div class="loading"><div class="spinner"></div> Analyzing patterns...</div>
+                </div>
+            </div>
+            
+            <!-- Alerts -->
+            <div class="card">
+                <div class="card-header">
+                    <div class="card-icon">🚨</div>
+                    <div>
+                        <div class="card-title">Health Alerts</div>
+                        <div class="card-subtitle">Important health notifications</div>
+                    </div>
+                </div>
+                <div id="alerts-container">
+                    <div class="loading"><div class="spinner"></div> Loading alerts...</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Statistics -->
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">📊</div>
+                <div>
+                    <div class="card-title">Health Statistics</div>
+                    <div class="card-subtitle">Summary of your health metrics</div>
+                </div>
+            </div>
+            <div id="statistics-container">
+                <div class="loading"><div class="spinner"></div> Computing statistics...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─── DOCTOR SUMMARY PAGE ───────────────────── -->
+    <div id="page-summary" class="page">
+        <div class="card">
+            <div class="card-header">
+                <div class="card-icon">📄</div>
+                <div>
+                    <div class="card-title">Doctor-Ready Health Summary</div>
+                    <div class="card-subtitle">Generated report for your healthcare provider</div>
+                </div>
+                <div style="margin-left: auto; display:flex; gap:10px;">
+                    <select id="summary-days" class="form-control" style="width:auto; padding:6px 10px;" onchange="loadSummary()">
+                        <option value="7">Last 7 days</option>
+                        <option value="14">Last 14 days</option>
+                        <option value="30">Last 30 days</option>
+                    </select>
+                    <button class="btn btn-primary btn-sm" onclick="printSummary()">
+                        🖨️ Print
+                    </button>
+                </div>
+            </div>
+            <div id="summary-container">
+                <div class="loading"><div class="spinner"></div> Generating summary...</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ═══════════════════════════════════════════════════ -->
+<!-- TOAST NOTIFICATIONS                                 -->
+<!-- ═══════════════════════════════════════════════════ -->
+<div class="toast-container" id="toast-container"></div>
+
+<script src="/static/script.js"></script>
+</body>
+</html>
