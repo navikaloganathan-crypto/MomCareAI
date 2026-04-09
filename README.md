@@ -78,8 +78,10 @@ It provides:
 
 ## ✨ Live Demo
 
-- 🎥 Demo Video: *Coming Soon*  
-- 🌐 Deployed App: *Coming Soon*
+- ## ✨ Live Demo
+
+🎥 **Demo Video:** [Watch MomCareAI in Action](https://github.com/navikaloganathan-crypto/MomCareAI/blob/main/MomCareAI.mp4)
+
 
 ---
 
